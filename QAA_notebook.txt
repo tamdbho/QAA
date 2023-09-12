@@ -1,0 +1,430 @@
+QAA project:
+    Use FASTQC for pre- and post-trimmming quality assessment of FASTQ data
+Programs used in this project:
+    FASTQC --version 0.11.5
+    cutadapt --version 4.4
+    trimmomatic --version 0.39
+    STAR --version 2.7.10b
+    htseq-count --version 2.0.3
+-------------
+09/06/2023
+-------------
+Library assignment: (received from /projects/bgmp/shared/Bi623/QAA_data_assignments.txt )
+Tam     29_4E_fox_S21_L008      8_2F_fox_S7_L008
+
+File names inside /projects/bgmp/shared/2017_sequencing/demultiplexed/ :
+    29_4E_fox_S21_L008_R1_001.fastq.gz
+    29_4E_fox_S21_L008_R2_001.fastq.gz
+    8_2F_fox_S7_L008_R1_001.fastq.gz
+    8_2F_fox_S7_L008_R2_001.fastq.gz
+
+Load FASTQC program as a module:
+module spider fastqc            # this command searches talapas for fastqc module
+module load fastqc/0.11.5       # from the spider command, a prompt was returned and I copied and pasted this command from the prompt to load fastqc
+
+Run FASTQC on the assigned files:
+SYNTAX: fastqc R1.fastq R2.fastq -o $dir --extract
+    -o          = specify where the output will be placed. default = current directory
+    --extract   = extract the zipped output files to access all the reports (stat summary and png files) (if left unspecified: only 2 files will be returned = an html and a zipped file)
+
+    fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz 
+        -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/29_output 
+        --extract
+    fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz 
+        -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/8_output 
+        --extract
+
+For efficiency and to extract the time it took to run, plug everything above into a bash script: 
+    module spider fastqc
+    module load fastqc/0.11.5
+
+    dir_1_R1=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz
+    dir_1_R2=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz
+    dir_2_R1=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz
+    dir_2_R2=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz
+
+    output_dir1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/29_output
+    output_dir2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/8_output
+    /usr/bin/time -v fastqc $dir_1_R1 -o $output_dir1 --extract
+    /usr/bin/time -v fastqc $dir_1_R2 -o $output_dir1 --extract
+    /usr/bin/time -v fastqc $dir_2_R1 -o $output_dir2 --extract
+    /usr/bin/time -v fastqc $dir_2_R2 -o $output_dir2 --extract
+
+Run another bash script to run old pythons script from Demultiplex Assignment (part 1)
+    conda activate bgmp_py311
+
+    file_1=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz
+    file_2=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz
+    file_3=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz 
+    file_4=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz 
+    output_1="29_R1.png"
+    output_2="29_R2.png"
+    output_3="8_R1.png"
+    output_4="8_R2.png"
+
+    /usr/bin/time -v ./per.base_qscore.py -f $file_1 -u $output_1 -l 101
+    /usr/bin/time -v ./per.base_qscore.py -f $file_2 -u $output_2 -l 101
+    /usr/bin/time -v ./per.base_qscore.py -f $file_3 -u $output_3 -l 101
+    /usr/bin/time -v ./per.base_qscore.py -f $file_4 -u $output_4 -l 101
+
+PYTHON SCRIPT (running sum strategy):
+    #!/usr/bin/env python
+    import gzip
+    import bioinfo
+    import matplotlib.pyplot as plt
+    import argparse
+    def get_args():
+        parser = argparse.ArgumentParser(description="Reads FASTQ file and output per base mean quality score distribution graph")
+        parser.add_argument("-f", "--filename", help="Path to file", required=True)
+        parser.add_argument("-u", "--outputimage", help="Path to output histogram image", type=str)
+        parser.add_argument("-l", "--listlength", help="length of empty list", type=int)
+        return parser.parse_args()
+    args=get_args()	
+    f = args.filename  # input file name
+    u = args.outputimage 
+    l = args.listlength
+
+    # Create an empty list:
+    qscore_sum = []
+    i = 0
+    while i < l:
+        qscore_sum.append(0.0)
+        i+=1
+
+    # Using empty list to calculate a running sum of qscores for each base position:
+    with gzip.open (f,"rt") as file:
+        i = 0
+        num_lines = 0
+        for line in file:
+            line = line.strip()
+            i+=1
+            num_lines+=1
+            if i%4 == 0:
+                for base in range (len(line)):
+                    qscore_sum [base] += bioinfo.convert_phred(line[base])
+
+    # Use list of sums to calculate all the means:
+    num_record = num_lines/4
+    qscore_mean = []
+    for qscore in qscore_sum:
+        qscore_mean.append(qscore/num_record)
+
+    # Create histogram and tsv file:
+    x = []
+    for i in range(len(qscore_mean)):
+        x.append(i)
+    y = qscore_mean
+
+    plt.bar (x,y)
+    plt.xlabel("Position in read (bp)")
+    plt.ylabel("Mean QScore")
+    plt.title(f'Mean quality scores across all bases {u}')
+    plt.savefig(f'{u}.png')
+
+This allows me to submit one sbatch for all 4 files since these are large files so it should take while (this script still runs script sequentially not simultaneously)
+
+-------------
+09/07/2023
+-------------
+Run time summary for all scripts:
+    File                    FASTQC (s)      PYTHON (s)
+    29_4E_fox_S21_L008_R1	25.88	        90.89		
+    29_4E_fox_S21_L008_R1	26.63	        103.23		
+    8_2F_fox_S7_L008_R1	    172.88	        691.86		
+    8_2F_fox_S7_L008_R2	    173.51	        709.80	
+
+scp (secure copy) fastqc-generated per base quality score graphs, per base n content graphs and python-generated per base quality score graph to local computer for R markdown
+
+-------------
+09/08/2023
+-------------
+Create a new conda environment - QAA:
+    conda create --name QAA
+Install cutadapt and trimmomatic in this new environment:
+    conda install cutadapt (4.4)
+    conda install trimmomatic (0.39)
+
+Next step: we want to trim off any adapter exist in the sequence
+Look into fastqc.data.txt file and check "Overrepresented sequence" section 
+    29_4E_fox_S21_L008_R1   nothing found (from bash: )
+    29_4E_fox_S21_L008_R2   nothing found
+    8_2F_fox_S7_L008_R1     nothing found
+    8_2F_fox_S7_L008_R2
+        >>Overrepresented sequences	warn
+        #Sequence	Count	Percentage	Possible Source
+        CCTCACCCGGCCCGGACACGGACAGGATTGACAGATTGATAGCTCTTTCT	36771	0.10079051107129121	No Hit
+    Sometimes overrepresented sequence could be adapter but not vice versa. 
+
+Finding Adapter - google "Illumina Adapter Trim Sequence:
+    Read 1: AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
+    Read 2: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+    By looking at adapter_content.png we can see the adapter used was the Illumina Universal Adapter
+
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz | grep "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA" | wc -l
+    39701
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz | grep "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" | wc -l
+    39929
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz | grep "AGATCGGAAGAGCACACGTCTGAACTCCAGTCA" | wc -l
+    161695
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz | grep "AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" | wc -l
+    164539
+
+Jut out of curiosity though, if we try to find this adapter sequence that exist at the beginning of the sequence:
+This would mean insert length is 0 and we're looking at adapter dimer
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz | grep "^AGATCGGAAGAG" | wc -l
+    3   
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz | grep "^AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT" | wc -l
+    0
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz | grep "^AGATCGGAAGAG" | wc -l
+    24
+zcat /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz | grep "^AGATCGGAAGAG" | wc -l
+    13
+
+cutadapt SYNTAX:
+(for paired-end read)
+    cutadapt -a ADAPT1 -A ADAPT2 [options] -o out1.fastq -p out2.fastq in1.fastq in2.fastq
+        -a      =   remove 3' adapter from R1
+        -A      =   remove 3' adapter from R2
+
+My understanding is that for both read 1 and read 2, during sequencing event, even though paired-end sequencing is done from opposite direction, 
+the sequences will always be read form 5' to 3' directions
+So for the cutadapt function, adapters will most likely be present on the 3' end of each sequence 
+Because the insert is fairly short (101bp): sequencing process go past the insert and read into the adapter
+However, during the event that the insert size is 0, we have adapter dimer where it is only the adapters that are sequenced. (low proportion as shown above)
+
+Run a sbatch script:
+    conda activate QAA
+
+    adapter_R1="AGATCGGAAGAGCACACGTCTGAACTCCAGTCA"
+    adapter_R2="AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT"
+
+    input_dir1_R1=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz
+    input_dir1_R2=/projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz
+    input_dir2_R1=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz
+    input_dir2_R2=/projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz
+
+    output_dir1_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R1.fastq
+    output_dir1_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R2.fastq
+    output_dir2_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R1.fastq
+    output_dir2_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R2.fastq
+
+    /usr/bin/time -v cutadapt -a $adapter_R1 -A $adapter_R2 -o $output_dir1_R1 -p $output_dir1_R2 $input_dir1_R1 $input_dir1_R2
+    /usr/bin/time -v cutadapt -a $adapter_R1 -A $adapter_R2 -o $output_dir2_R1 -p $output_dir2_R2 $input_dir2_R1 $input_dir2_R2
+
+=== Summary ===
+29_4E_fox_S21_L008
+    Total read pairs processed:          4,827,433
+    Read 1 with adapter:                 361,886 (7.5%)
+    Read 2 with adapter:                 400,819 (8.3%)
+    Pairs written (passing filters):     4,827,433 (100.0%)
+8_2F_fox_S7_L008
+    Total read pairs processed:         36,482,601
+    Read 1 with adapter:               2,145,600 (5.9%)
+    Read 2 with adapter:               2,403,490 (6.6%)
+    Pairs written (passing filters):    36,482,601 (100.0%)
+The numbers of adapted detected by cutadapt is much much larger than simply grep the adapter sequence from the files (shown above)
+There are defaults parameters in cutadapt: maximum error rate, minimum overlap parameters,etc. which basically allows to detect adapters even in the event of sequencing error
+
+Trimmomatic SYNTAX:
+    PE [-version] [-threads <threads>] [-phred33|-phred64] [-trimlog <trimLogFile>] [-summary <statsSummaryFile>] [-quiet] 
+    [-validatePairs] [-basein <inputBase> | <inputFile1> <inputFile2>] 
+    [-baseout <outputBase> | <outputFile1P> <outputFile1U> <outputFile2P> <outputFile2U>] <trimmer1>
+
+    The parameters Leslie wants:
+        LEADING: quality of 3 
+            (remove low quality bases from the beginning)
+        TRAILING: quality of 3 
+            (remove low quality bases from the end)
+        SLIDING WINDOW: window size of 5 and required quality of 15
+            (perform sliding window trimming, cutting once the average quality within the window falls below a threshold)
+        MINLENGTH: 35 bases
+            (removes reads that falls below the specified length)
+
+Sbatch script:
+    conda activate QAA
+
+    input_dir1_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R1.fastq
+    input_dir1_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R2.fastq
+    input_dir2_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R1.fastq
+    input_dir2_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R2.fastq
+
+    output_dir1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29
+    output_dir2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8
+
+    /usr/bin/time -v trimmomatic PE -phred33 $input_dir1_R1 $input_dir1_R2 $output_dir1/29_R1_PAIRED.fq.gz $output_dir1/29_R1_UNPAIRED.fq.gz $output_dir1/29_R2_PAIRED.fq.gz $output_dir1/29_R2_UNPAIRED.fq.gz LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35
+    /usr/bin/time -v trimmomatic PE -phred33 $input_dir2_R1 $input_dir2_R2 $output_dir2/8_R1_PAIRED.fq.gz $output_dir2/8_R1_UNPAIRED.fq.gz $output_dir2/8_R2_PAIRED.fq.gz $output_dir2/8_R2_UNPAIRED.fq.gz LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35 
+
+Even though trimmomatic has a function to take cut the adapters, it is not as good as cut adapt, so we use both program to do quality trimming. 
+
+-------------
+09/09/2023
+-------------
+Plotting the read length distributions for both R1 and R2 (1 plot per file)
+Using python (matplotlib)
+Create a list containing all the read length while iterating through the PAIRED files - make one list for each read file (ther are R1 and R2)
+To plot both lists (R1 and R2) in the same graph:
+Write two plt.hist() consecutively - this function will count the number of occurrence of each read length. 
+Python script: 
+    length_dist1 = []
+    length_dist2 = []
+    with gzip.open (r1,"rt") as file1:
+        i = 0
+        for line in file1:
+            line = line.strip()
+            i+=1
+            if i%4 == 2:
+                length = len(line)
+                length_dist1.append(length)
+    with gzip.open (r2,"rt") as file2:
+        i = 0
+        for line2 in file2:
+            line2 = line.strip()
+            i+=1
+            if i%4 == 2:
+                length2 = len(line2)
+                length_dist2.append(length2)
+    plt.hist ([length_dist1,length_dist2], alpha = 0.5, color =['purple','red'], label=['R1','R2'])
+    plt.legend()
+    plt.xlabel("Read length (bp))"
+    plt.ylabel("Count")
+    plt.title(f'Read length distribution of 8_2F_fox_S7_L008')
+    plt.savefig("rlength_8_2F_fox_S7_L008.png")
+
+-------------
+09/10/2023
+-------------
+Install into QAA env:
+    conda install star -c bioconda
+    conda install numpy
+    conda install matplotlib
+    conda install htseq
+
+Download mouse genome FASTA file and GTF file from ensembl (release 110):
+Download unmasked primary assembly:
+    wget https://ftp.ensembl.org/pub/release-110/fasta/mus_musculus/dna/Mus_musculus.GRCm39.dna.primary_assembly.fa.gz
+Download GTF file:
+    wget https://ftp.ensembl.org/pub/release-110/gtf/mus_musculus/Mus_musculus.GRCm39.110.gtf.gz
+Create a new directory (for next step: generate a mouse database):
+    mkdir QAA/Mus_musculus.GRCm39.ens110.STAR_2.7.10b
+
+Generate mouse database using STAR - SBATCH script:
+    #!/bin/bash
+    #SBATCH --account=bgmp                    #REQUIRED: which account to use
+    #SBATCH --partition=compute               #REQUIRED: which partition to use
+    #SBATCH --cpus-per-task=8                 #optional: number of cpus, default is 1
+    #SBATCH --mem=32GB                        #optional: amount of memory, default is 4GB
+
+    conda activate QAA
+
+    dbDIR=/projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.ens110.STAR_2.7.10b
+    fastaDIR=/projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.dna.primary_assembly.fa.gz
+    gtfDIR=/projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf.gz
+
+    /usr/bin/time -v STAR \
+    --runThreadN 8 \
+    --runMode genomeGenerate \
+    --genomeDir $dbDIR \
+    --genomeFastaFiles $fastaDIR \
+    --sjdbGTFfile $gtfDIR
+16 files (.txt and .tab) were generated in database directory
+
+Align reads (quality trimmed paired read 1 and 2) to the generated database - using STAR:
+Assignment requires a "splice-aware" alignment - STAR is a splice-aware alignment tool
+Instruction says use gene models : basically means don't forget GTF file?
+Use parameter same as PS8
+
+SBATCH SCRIPT:
+    conda activate QAA
+
+    dbDIR=/projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.ens110.STAR_2.7.10b
+
+    input_dir1_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29_4E_fox_S21_L008/29_R1_PAIRED.fq.gz
+    input_dir1_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29_4E_fox_S21_L008/29_R2_PAIRED.fq.gz
+
+    input_dir2_R1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8_2F_fox_S7_L008/8_R1_PAIRED.fq.gz
+    input_dir2_R2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8_2F_fox_S7_L008/8_R2_PAIRED.fq.gz
+
+    /usr/bin/time -v STAR \
+    --runThreadN 8 \
+    --runMode alignReads \
+    --outFilterMultimapNmax 3 \
+    --outSAMunmapped Within KeepPairs \
+    --alignIntronMax 1000000 \
+    --alignMatesGapMax 1000000 \
+    --readFilesCommand zcat \
+    --readFilesIn $input_dir2_R1 $input_dir2_R2 \
+    --genomeDir $dbDIR
+Output = 4 files (including 1 SAM file and others .out , .tab)
+
+-------------
+09/11/2023
+-------------
+Run htseq-count 
+SYNTAX: htseq-count [options] <alignment_files> <gtf_file>
+Instruction specifies to try both --stranded =yes and --stranded=reverse for both sets of files
+SBATCH SCRIPT:
+
+    conda activate QAA
+
+    gtfDIR=/projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf
+    samDIR1=/projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_29_4E_fox_S21_L008/Aligned.out.sam
+    samDIR2=/projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_8_2F_fox_S7_L008/Aligned.out.sam
+
+    output=/projects/bgmp/tamho/bioinfo/Bi623/QAA
+
+    /usr/bin/time -v htseq-count --stranded yes $samDIR1 $gtfDIR > $output/stranded_mapped_29_4E_fox_S21_L008.tsv
+    /usr/bin/time -v htseq-count --stranded reverse $samDIR1 $gtfDIR > $output/reverse_mapped_29_4E_fox_S21_L008.tsv
+    /usr/bin/time -v htseq-count --stranded yes $samDIR2 $gtfDIR > $output/stranded_mapped_8_2F_fox_S7_L008.tsv
+    /usr/bin/time -v htseq-count --stranded reverse $samDIR2 $gtfDIR > $output/stranded_mapped_8_2F_fox_S7_L008.tsv
+Output: 4 files tsv files (each has 2 columns: gene_id and count per gene_id)
+
+-------------
+09/12/2023
+-------------
+Using mapped.py script from PS8 to count mapped and unmapped gene from 2 SAM files
+This script takes into account both primary and secondary mapping (look into bitwise flag)
+
+    mapped_count = 0
+    unmapped_count = 0
+    with open (f,"r") as sam: # -f input file should be a sam file
+        i = 0
+        for line in sam:
+            line = line.strip()
+            if line.startswith("@"):
+                pass
+            else:
+                line = line.split("\t")
+                flag = int(line [1])
+                if ((flag & 256) != 256):
+                    if ((flag & 4) != 4):
+                        mapped_count += 1
+                    else:
+                        unmapped_count += 1
+            i+=1
+        print("Number of mapped sequence: ",mapped_count)
+        print("Number of unmapped sequence: ",unmapped_count)
+
+./mapped.py -f ./STAR_align_output_8_2F_fox_S7_L008/Aligned.out.sam 
+Number of mapped sequence:  67070899
+Number of unmapped sequence:  2511415
+
+./mapped.py -f ./STAR_align_output_29_4E_fox_S21_L008/Aligned.out.sam 
+Number of mapped sequence:  8883008
+Number of unmapped sequence:  260800
+
+============
+from htseq-count output files (.tsv):
+NUMBER OF MAPPED GENES:
+    cat <file_path>| grep -v "^__" | awk 'BEGIN{sumreads = 0}{sumreads+=$2}END{print sumreads}'
+stranded_mapped_8_2F_fox_S7_L008 = 1260830
+reverse_mapped_8_2F_fox_S7_L008 = 28039864
+stranded_mapped_29_4E_fox_S21_L008 = 185940
+reverse_mapped_29_4E_fox_S21_L008 = 3859931
+
+TOTAL READS:
+    cat <file_path>| grep -v "^__" | awk 'BEGIN{sumreads = 0}{sumreads+=$2}END{print sumreads}'
+stranded_mapped_8_2F_fox_S7_L008.tsv = 34791157
+reverse_mapped_8_2F_fox_S7_L008 = 34791157
+stranded_mapped_29_4E_fox_S21_L008 = 4571904
+reverse_mapped_29_4E_fox_S21_L008 = 4571904
+
