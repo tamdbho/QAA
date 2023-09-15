@@ -422,9 +422,119 @@ stranded_mapped_29_4E_fox_S21_L008 = 185940
 reverse_mapped_29_4E_fox_S21_L008 = 3859931
 
 TOTAL READS:
-    cat <file_path>| grep -v "^__" | awk 'BEGIN{sumreads = 0}{sumreads+=$2}END{print sumreads}'
+    cat <file_path>| awk 'BEGIN{sumreads = 0}{sumreads+=$2}END{print sumreads}'
 stranded_mapped_8_2F_fox_S7_L008.tsv = 34791157
 reverse_mapped_8_2F_fox_S7_L008 = 34791157
 stranded_mapped_29_4E_fox_S21_L008 = 4571904
 reverse_mapped_29_4E_fox_S21_L008 = 4571904
 
+
+=============================================================================================
+ALL /usr/bin/time:
+Command being timed: "./per.base_qscore.py -f /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz -u 29_4E_fox_S21_L008_R1_001 -l 101"
+	User time (seconds): 90.89
+	System time (seconds): 1.27
+	Percent of CPU this job got: 92%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:39.32
+    Exit status: 0
+Command being timed: "./per.base_qscore.py -f /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz -u 29_4E_fox_S21_L008_R2_001 -l 101"
+	User time (seconds): 103.23
+	System time (seconds): 0.85
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:43.73
+    Exit status: 0
+Command being timed: "./per.base_qscore.py -f /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz -u 8_2F_fox_S7_L008_R1_001 -l 101"
+	User time (seconds): 691.86
+	System time (seconds): 2.07
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 11:50.32
+    Exit status: 0
+Command being timed: "./per.base_qscore.py -f /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz -u 8_2F_fox_S7_L008_R2_001 -l 101"
+	User time (seconds): 709.80
+	System time (seconds): 1.83
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 11:53.25
+    Exit status: 0
+==========================================================
+Command being timed: "fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/29_output --extract"
+	User time (seconds): 25.88
+	System time (seconds): 1.05
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:27.65
+    Exit status: 0
+Command being timed: "fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/29_output --extract"
+	User time (seconds): 26.63
+	System time (seconds): 1.20
+	Percent of CPU this job got: 102%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:27.16
+    Exit status: 0
+Command being timed: "fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/8_output --extract"
+	User time (seconds): 172.88
+	System time (seconds): 6.92
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:59.18
+    Exit status: 0
+Command being timed: "fastqc /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/8_output --extract"
+	User time (seconds): 173.51
+	System time (seconds): 8.04
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:01.20
+    Exit status: 0
+==========================================================
+Command being timed: "cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R1.fastq -p /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R2.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R1_001.fastq.gz /projects/bgmp/shared/2017_sequencing/demultiplexed/29_4E_fox_S21_L008_R2_001.fastq.gz"
+	User time (seconds): 28.63
+	System time (seconds): 1.43
+	Percent of CPU this job got: 87%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:34.35
+    Exit status: 0
+Command being timed: "cutadapt -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT -o /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R1.fastq -p /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R2.fastq /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R1_001.fastq.gz /projects/bgmp/shared/2017_sequencing/demultiplexed/8_2F_fox_S7_L008_R2_001.fastq.gz"
+	User time (seconds): 221.08
+	System time (seconds): 11.64
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:59.43
+    Exit status: 0
+==========================================================
+Command being timed: "trimmomatic PE -phred33 /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R1.fastq /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_29/29_4E_fox_S21_L008_R2.fastq /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29/29_R1_PAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29/29_R1_UNPAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29/29_R2_PAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_29/29_R2_UNPAIRED.fq.gz LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35"
+	User time (seconds): 255.65
+	System time (seconds): 5.42
+	Percent of CPU this job got: 204%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:07.74
+    Exit status: 0
+Command being timed: "trimmomatic PE -phred33 /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R1.fastq /projects/bgmp/tamho/bioinfo/Bi623/QAA/cutadapt_8/8_2F_fox_S7_L008_R2.fastq /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8/8_R1_PAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8/8_R1_UNPAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8/8_R2_PAIRED.fq.gz /projects/bgmp/tamho/bioinfo/Bi623/QAA/trimmed_8/8_R2_UNPAIRED.fq.gz LEADING:3 TRAILING:3 SLIDINGWINDOW:5:15 MINLEN:35"
+	User time (seconds): 1915.24
+	System time (seconds): 39.82
+	Percent of CPU this job got: 204%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 15:55.35
+    Exit status: 0
+==========================================================
+Command being timed: "STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.ens110.STAR_2.7.10b --genomeFastaFiles /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.dna.primary_assembly.fa --sjdbGTFfile /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf"
+	User time (seconds): 5314.66
+	System time (seconds): 49.11
+	Percent of CPU this job got: 509%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 17:32.91
+    Exit status: 0
+==========================================================
+Command being timed: "htseq-count --stranded yes /projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_29_4E_fox_S21_L008/Aligned.out.sam /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf"
+	User time (seconds): 391.89
+	System time (seconds): 2.13
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 6:41.82
+    Exit status: 0
+Command being timed: "htseq-count --stranded reverse /projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_29_4E_fox_S21_L008/Aligned.out.sam /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf"
+	User time (seconds): 397.28
+	System time (seconds): 1.90
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 6:39.73
+    Exit status: 0
+Command being timed: "htseq-count --stranded yes /projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_8_2F_fox_S7_L008/Aligned.out.sam /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf"
+	User time (seconds): 2477.23
+	System time (seconds): 6.74
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 41:29.90
+    Exit status: 0
+Command being timed: "htseq-count --stranded reverse /projects/bgmp/tamho/bioinfo/Bi623/QAA/STAR_align_output_8_2F_fox_S7_L008/Aligned.out.sam /projects/bgmp/tamho/bioinfo/Bi623/QAA/Mus_musculus.GRCm39.110.gtf"
+	User time (seconds): 2552.42
+	System time (seconds): 6.87
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 42:43.98
+    Exit status: 0
